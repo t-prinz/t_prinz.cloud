@@ -1,0 +1,131 @@
+---
+- name: get instance info
+  amazon.aws.ec2_instance_info:
+    aws_access_key: "{{ aws_aws_access_key | default(omit) }}"
+    aws_secret_key: "{{ aws_aws_secret_key | default(omit) }}"
+    filters:
+      "tag:Name": "{{ inventory_hostname }}"
+    region: "{{ aws_region }}"
+  register: instance_info
+
+- name: print instance info
+  debug:
+    var: instance_info
+    verbosity: 1
+
+- name: Block to delete the instance if it exists and is not terminated
+  block:
+
+    - name: print instance info
+      ansible.builtin.debug:
+        var: instance_info.instances[0]
+        verbosity: 1
+
+    - name: print instance info id
+      ansible.builtin.debug:
+        msg: "Deleting instance {{ inventory_hostname }} with instand_id:  {{ instance_info.instances[0].instance_id }}"
+
+    - name: get elastic ip info
+      amazon.aws.ec2_eip_info:
+        aws_access_key: "{{ aws_aws_access_key | default(omit) }}"
+        aws_secret_key: "{{ aws_aws_secret_key | default(omit) }}"
+        filters:
+          "tag:Name": "{{ inventory_hostname }}"
+        region: "{{ aws_region }}"
+      register: eip_info
+
+    - name: Block to delete the route53 name and the elastic IP if defined
+      block:
+
+        - name: print elastic ip info
+          ansible.builtin.debug:
+            var: eip_info
+            verbosity: 1
+          when: eip_info.addresses[0] is defined
+
+        - name: get route53 zone id
+          amazon.aws.route53_zone:
+            aws_access_key: "{{ aws_aws_access_key | default(omit) }}"
+            aws_secret_key: "{{ aws_aws_secret_key | default(omit) }}"
+            zone: "{{ aws_route53_zone }}"
+          register: route53_zone_info
+
+        - name: print route53_zone_info
+          ansible.builtin.debug:
+            var: route53_zone_info
+            verbosity: 1
+
+        - name: print what to query
+          ansible.builtin.debug:
+            msg: "Querying for {{ eip_info.addresses[0].tags.Name }}.{{ aws_route53_zone }}"
+            verbosity: 1
+          when: eip_info.addresses[0].tags.Name is defined
+
+# This returns unexpected records from the zone if there is no match; probably user error
+
+        - name: get route53 dns info for the instance
+          amazon.aws.route53_info:
+            aws_access_key: "{{ aws_aws_access_key | default(omit) }}"
+            aws_secret_key: "{{ aws_aws_secret_key | default(omit) }}"
+            type: A
+            query: record_sets
+            hosted_zone_id: "{{ route53_zone_info.zone_id }}"
+            max_items: "{{ '1'|int }}"
+            start_record_name: "{{ eip_info.addresses[0].tags.Name }}.{{ aws_route53_zone }}"
+          when: eip_info.addresses[0].tags.Name is defined
+          register: route53_out
+
+        - name: print route53 dns info
+          ansible.builtin.debug:
+            var: route53_out
+            verbosity: 1
+
+# Set dns name we want to delete to make sure that is what was returned from the query
+# The "." is added since the fqdn that is returned from the query includes it as part of the name
+
+        - name: define dns name to delete
+          ansible.builtin.set_fact:
+            dns_name_to_delete: "{{ eip_info.addresses[0].tags.Name }}.{{ aws_route53_zone }}."
+
+        - name: Print dns name to be deleted
+          ansible.builtin.debug:
+            msg: "Deleting the dns entry {{ route53_out.resource_record_sets[0].name }}"
+          when: route53_out.resource_record_sets[0].name is defined
+
+        - name: delete the route53 dns entry
+          amazon.aws.route53:
+            aws_access_key: "{{ aws_aws_access_key | default(omit) }}"
+            aws_secret_key: "{{ aws_aws_secret_key | default(omit) }}"
+            record: "{{ route53_out.resource_record_sets[0].name }}"
+            state: absent
+            type: "{{ route53_out.resource_record_sets[0].type }}"
+            value: "{{ route53_out.resource_record_sets[0].resource_records[0].value }}"
+            wait: Yes
+            zone: "{{ aws_route53_zone }}"
+          when: route53_out.resource_record_sets[0].name is defined
+
+        - name: delete the elastic ip's from the instance
+          amazon.aws.ec2_eip:
+            aws_access_key: "{{ aws_aws_access_key | default(omit) }}"
+            aws_secret_key: "{{ aws_aws_secret_key | default(omit) }}"
+            device_id: "{{ eip_info.addresses[0].instance_id }}"
+            public_ip: "{{ eip_info.addresses[0].public_ip }}"
+            region: "{{ aws_region }}"
+            release_on_disassociation: yes
+            state: absent
+          when: eip_info.addresses[0].instance_id is defined
+
+      when: eip_info.addresses[0].instance_id is defined
+
+    - name: delete the instance
+      amazon.aws.ec2_instance:
+        aws_access_key: "{{ aws_aws_access_key | default(omit) }}"
+        aws_secret_key: "{{ aws_aws_secret_key | default(omit) }}"
+        image_id: "{{ instance_info.instances[0].image_id }}"
+        instance_ids: "{{ instance_info.instances[0].instance_id }}"
+        instance_type: "{{ instance_info.instances[0].instance_type }}"
+        name: "{{ instance_info.instances[0].tags.Name }}"
+        region: "{{ aws_region }}"
+        state: absent
+
+  when: instance_info.instances[0] is defined and instance_info.instances[0].state.name != "terminated"

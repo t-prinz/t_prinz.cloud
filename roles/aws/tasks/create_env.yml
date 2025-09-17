@@ -1,0 +1,117 @@
+---
+
+# Items created:
+#   - VPC
+#   - Subnet
+#   - Internet gateway
+#   - Entry in default route table
+#   - Security Group
+
+- name: create VPC
+  amazon.aws.ec2_vpc_net:
+    aws_access_key: "{{ aws_aws_access_key | default(omit) }}"
+    aws_secret_key: "{{ aws_aws_secret_key | default(omit) }}"
+    name: "{{ aws_vpc_name }}"
+    region: "{{ aws_region }}"
+    cidr_block: "{{ aws_vpc_cidr_block }}"
+    state: present
+  register: vpc_info
+
+- name: print vpc info
+  ansible.builtin.debug:
+    var: vpc_info
+    verbosity: 1
+
+- name: create subnet in the VPC
+  amazon.aws.ec2_vpc_subnet:
+    aws_access_key: "{{ aws_aws_access_key | default(omit) }}"
+    aws_secret_key: "{{ aws_aws_secret_key | default(omit) }}"
+    az: "{{ aws_az | default(omit) }}"
+    cidr: "{{ aws_subnet_cidr }}"
+    region: "{{ aws_region }}"
+    state: present
+    tags:
+      Name: "{{ aws_subnet_name }}"
+    vpc_id: "{{ vpc_info.vpc.id }}"
+  register: subnet_info
+
+- name: print subnet info
+  ansible.builtin.debug:
+    var: subnet_info
+    verbosity: 1
+
+- name: get information for VPC default route table
+  amazon.aws.ec2_vpc_route_table_info:
+    aws_access_key: "{{ aws_aws_access_key | default(omit) }}"
+    aws_secret_key: "{{ aws_aws_secret_key | default(omit) }}"
+    filters:
+      vpc-id: "{{ vpc_info.vpc.id }}"
+    region: "{{ aws_region }}"
+  register: default_rtb_info
+
+- name: print default route table info
+  ansible.builtin.debug:
+    var: default_rtb_info
+    verbosity: 1
+
+- name: print default route table id
+  ansible.builtin.debug:
+    var: default_rtb_info.route_tables[0].id
+    verbosity: 1
+
+- name: create internet gateway for VPC
+  amazon.aws.ec2_vpc_igw:
+    aws_access_key: "{{ aws_aws_access_key | default(omit) }}"
+    aws_secret_key: "{{ aws_aws_secret_key | default(omit) }}"
+    region: "{{ aws_region }}"
+    state: present
+    tags:
+      Name: "{{ aws_igw_name }}"
+    vpc_id: "{{ vpc_info.vpc.id }}"
+  register: igw_info
+
+- name: print internet gateway info
+  ansible.builtin.debug:
+    var: igw_info
+    verbosity: 1
+
+- name: create route table entry for the internet gateway
+  amazon.aws.ec2_vpc_route_table:
+    aws_access_key: "{{ aws_aws_access_key | default(omit) }}"
+    aws_secret_key: "{{ aws_aws_secret_key | default(omit) }}"
+    lookup: id
+    region: "{{ aws_region }}"
+    route_table_id: "{{ default_rtb_info.route_tables[0].id }}"
+    routes:
+      - dest: 0.0.0.0/0
+        gateway_id: "{{ igw_info.gateway_id }}"
+    state: present
+    subnets:
+      - "{{ subnet_info.subnet.id }}"
+    vpc_id: "{{ vpc_info.vpc.id }}"
+  register: default_rtb_info
+
+- name: print default route table info
+  ansible.builtin.debug:
+    var: default_rtb_info
+    verbosity: 1
+
+- name: create security group
+  amazon.aws.ec2_group:
+    aws_access_key: "{{ aws_aws_access_key | default(omit) }}"
+    aws_secret_key: "{{ aws_aws_secret_key | default(omit) }}"
+    description: allow http, https, and ssh access
+    name: "{{ aws_securitygroup_name }}"
+    region: "{{ aws_region }}"
+    state: present
+    tags:
+      Name: "{{ aws_securitygroup_name }}"
+    vpc_id: "{{ vpc_info.vpc.id }}"
+    rules: "{{ aws_security_group_rules }}"
+    rules_egress: "{{ aws_security_group_rules_egress }}"
+  register: securitygroup_info
+
+- name: print security group information
+  ansible.builtin.debug:
+    var: securitygroup_info
+    verbosity: 1

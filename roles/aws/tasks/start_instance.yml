@@ -1,0 +1,32 @@
+---
+- name: get instance info
+  amazon.aws.ec2_instance_info:
+    aws_access_key: "{{ aws_aws_access_key | default(omit) }}"
+    aws_secret_key: "{{ aws_aws_secret_key | default(omit) }}"
+    filters:
+      "tag:Name": "{{ inventory_hostname }}"
+    region: "{{ aws_region }}"
+  register: instance_info
+
+- name: Block to start the instance
+  block:
+
+    - name: print instance info
+      ansible.builtin.debug:
+        var: instance_info.instances[0]
+        verbosity: 1
+
+    - name: print instance info id
+      ansible.builtin.debug:
+        msg: "Starting instance {{ inventory_hostname }} with instand_id:  {{ instance_info.instances[0].instance_id }}"
+
+    - name: start instances
+      amazon.aws.ec2_instance:
+        aws_access_key: "{{ aws_aws_access_key | default(omit) }}"
+        aws_secret_key: "{{ aws_aws_secret_key | default(omit) }}"
+        instance_ids: "{{ instance_info.instances[0].instance_id }}"
+        instance_type: "{{ instance_info.instances[0].instance_type }}"
+        region: "{{ aws_region }}"
+        state: started
+
+  when: instance_info.instances[0] is defined

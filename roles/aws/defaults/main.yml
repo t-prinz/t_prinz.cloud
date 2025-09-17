@@ -1,0 +1,50 @@
+#SPDX-License-Identifier: MIT-0
+---
+# defaults file for aws
+
+# This is the name of the VPC; it is used as a prefix for other resources
+
+aws_vpc_name: mynewvpc
+
+# This specifies the VPC region
+
+aws_region: us-east-2
+
+# This is the CIDR block for the VPC
+
+aws_vpc_cidr_block: 10.0.0.0/16
+
+# This is the name, CIDR, and availability zone for the subnet
+#   The CIDR must reside within the VPC CIDR block
+#   The availability zone must reside within the VPC region
+#   Specifying an availability zone is not required
+
+aws_subnet_name: "{{ aws_vpc_name }}-subnet"
+aws_subnet_cidr: 10.0.0.0/24
+#aws_az: us-east-2a
+
+# This defines the name of the internet gateway
+
+aws_igw_name: "{{ aws_vpc_name }}-igw"
+
+# This defines the security group name and associated ingress and egress rules to be applied.
+
+aws_securitygroup_name: "{{ aws_vpc_name }}-securitygroup"
+
+aws_security_group_rules:
+  - proto: tcp
+    from_port: 80
+    to_port: 80
+    cidr_ip: 0.0.0.0/0
+  - proto: tcp
+    from_port: 443
+    to_port: 443
+    cidr_ip: 0.0.0.0/0
+  - proto: tcp
+    from_port: 22
+    to_port: 22
+    cidr_ip: 0.0.0.0/0
+
+aws_security_group_rules_egress:
+  - proto: all
+    cidr_ip: 0.0.0.0/0
