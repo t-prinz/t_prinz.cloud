@@ -3,7 +3,7 @@
 Set-NetConnectionProfile -NetworkCategory Private
 
 $admin = [adsi]("WinNT://./administrator, user")
-$admin.PSBase.Invoke("SetPassword", "{{ aws_windows_ansible_password }}")
+$admin.PSBase.Invoke("SetPassword", "{{ windows_ansible_password }}")
 
 <#
 
@@ -69,5 +69,19 @@ $authorizedKey = "{{ aws_keypair_public_key }}"
 
 Add-Content -Force -Path $env:ProgramData\ssh\administrators_authorized_keys -Value $authorizedKey
 icacls.exe ""$env:ProgramData\ssh\administrators_authorized_keys"" /inheritance:r /grant ""Administrators:F"" /grant ""SYSTEM:F""
+
+# Add a new user that is part of the Administrators group
+
+$username = "{{ windows_ansible_username }}"
+$password = ConvertTo-SecureString -AsPlainText "{{ windows_ansible_password }}" -Force
+$params = @{
+    Name        = $username
+    Password    = $password
+    FullName    = ‘Ansible User Account’
+    Description = ‘Account used for Ansible automation’
+}
+New-LocalUser @params
+
+Add-LocalGroupMember -Group "Administrators" -Member $username
 
 </powershell>
