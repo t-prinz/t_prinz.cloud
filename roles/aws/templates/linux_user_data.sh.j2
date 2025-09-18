@@ -1,6 +1,6 @@
 #!/bin/bash
 
-useradd --comment "Ansible User Account" --user-group --groups wheel --password $(echo {{ linux_ansible_password }} | openssl passwd -6 -stdin) "{{ linux_ansible_user }}"
+useradd --comment "Ansible User Account" --user-group --groups wheel --password $(echo "{{ linux_ansible_password }}" | openssl passwd -6 -stdin) "{{ linux_ansible_user }}"
 
 mkdir ~"{{ linux_ansible_user }}"/.ssh
 chmod 700 ~"{{ linux_ansible_user }}"/.ssh
