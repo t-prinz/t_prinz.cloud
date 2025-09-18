@@ -1,0 +1,14 @@
+#!/bin/bash
+
+useradd --comment "Ansible User Account" --user-group --groups wheel --password $(echo {{ linux_ansible_password }} | openssl passwd -6 -stdin) "{{ linux_ansible_user }}"
+
+mkdir ~"{{ linux_ansible_user }}"/.ssh
+chmod 700 ~"{{ linux_ansible_user }}"/.ssh
+
+echo "{{ public key }}" > ~"{{ linux_ansible_user }}"/.ssh/authorized_keys
+chmod 600 ~"{{ linux_ansible_user }}"/.ssh/authorized_keys
+
+chown -R "{{ linux_ansible_user }}"."{{ linux_ansible_user }}" ~"{{ linux_ansible_user }}"/.ssh
+
+echo "{{ linux_ansible_user }}        ALL=(ALL)       NOPASSWD: ALL" > /etc/sudoers.d/"{{ linux_ansible_user }}"
+chmod 644 /etc/sudoers.d/"{{ linux_ansible_user }}"
