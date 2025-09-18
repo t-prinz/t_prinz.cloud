@@ -1,15 +1,15 @@
 #!/bin/bash
 
-password_hash=$(echo "'{{ aws_instance.aws_linux_ansible_password }}'" | openssl passwd -6 -stdin)
+password_hash=$(echo "{{ aws_instance.aws_linux_ansible_password }}" | openssl passwd -6 -stdin)
 useradd --comment "Ansible User Account" --user-group --groups wheel --password ${password_hash} "{{ aws_instance.aws_linux_ansible_username }}"
 
-mkdir ~"{{ aws_instance.aws_linux_ansible_username }}"/.ssh
-chmod 700 ~"{{ aws_instance.aws_linux_ansible_username }}"/.ssh
+mkdir ~{{ aws_instance.aws_linux_ansible_username }}/.ssh
+chmod 700 ~{{ aws_instance.aws_linux_ansible_username }}/.ssh
 
-echo "{{ public key }}" > ~"{{ aws_instance.aws_linux_ansible_username }}"/.ssh/authorized_keys
-chmod 600 ~"{{ aws_instance.aws_linux_ansible_username }}"/.ssh/authorized_keys
+echo "{{ aws_keypair_public_key }}" > ~{{ aws_instance.aws_linux_ansible_username }}/.ssh/authorized_keys
+chmod 600 ~{{ aws_instance.aws_linux_ansible_username }}/.ssh/authorized_keys
 
-chown -R "{{ aws_instance.aws_linux_ansible_username }}"."{{ aws_instance.aws_linux_ansible_username }}" ~"{{ aws_instance.aws_linux_ansible_username }}"/.ssh
+chown -R {{ aws_instance.aws_linux_ansible_username }}.{{ aws_instance.aws_linux_ansible_username }} ~{{ aws_instance.aws_linux_ansible_username }}/.ssh
 
-echo "{{ aws_instance.aws_linux_ansible_username }}        ALL=(ALL)       NOPASSWD: ALL" > /etc/sudoers.d/"{{ aws_instance.aws_linux_ansible_username }}"
-chmod 644 /etc/sudoers.d/"{{ aws_instance.aws_linux_ansible_username }}"
+echo "{{ aws_instance.aws_linux_ansible_username }}        ALL=(ALL)       NOPASSWD: ALL" > /etc/sudoers.d/{{ aws_instance.aws_linux_ansible_username }}
+chmod 644 /etc/sudoers.d/{{ aws_instance.aws_linux_ansible_username }}
