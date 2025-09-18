@@ -81,12 +81,12 @@
 - name: Define Windows user_data script
   ansible.builtin.set_fact:
     aws_user_data: "{{ lookup('template', 'win_ec2_user_data.ps1.j2') }}"
-  when: instance_hvar_os_type == 'Windows'
+  when: aws_instance.instance_hvar_os_type == 'Windows'
 
 - name: Define Linux user_data script
   ansible.builtin.set_fact:
     aws_user_data: "{{ lookup('template', 'linux_user_data.sh.j2') }}"
-  when: instance_hvar_os_type == 'Linux'
+  when: aws_instance.instance_hvar_os_type == 'Linux'
 
 - name: create and launch instance
   amazon.aws.ec2_instance:
