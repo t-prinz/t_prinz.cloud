@@ -88,6 +88,12 @@
     aws_user_data: "{{ lookup('template', 'linux_user_data.sh.j2') }}"
   when: aws_instance.aws_tags.instance_hvar_os_type == 'Linux'
 
+- name: Print user_data
+  ansible.builtin.debug:
+    var: aws_user_data
+    verbosity: 1
+  when: aws_user_data is defined
+
 - name: create and launch instance
   amazon.aws.ec2_instance:
     aws_access_key: "{{ aws_aws_access_key | default(omit) }}"
