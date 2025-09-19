@@ -74,13 +74,17 @@ icacls.exe ""$env:ProgramData\ssh\administrators_authorized_keys"" /inheritance:
 
 $username = "{{ aws_instance.aws_windows_ansible_username }}"
 $password = ConvertTo-SecureString -AsPlainText "{{ aws_instance.aws_windows_ansible_password }}" -Force
+$fullname = 'Ansible User Account'
+$description = 'Account used for Ansible automation'
 $params = @{
     Name        = $username
     Password    = $password
-    FullName    = 'Ansible User Account'
-    Description = 'Account used for Ansible automation'
+    FullName    = $fullname
+    Description = $description
 }
 New-LocalUser @params
+
+# New-LocalUser -Name $username -Password $password -FullName 'Ansible User Account' -Description 'Account used for Ansible automation'
 
 Add-LocalGroupMember -Group "Administrators" -Member $username
 
