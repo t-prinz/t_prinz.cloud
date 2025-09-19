@@ -84,8 +84,6 @@ $params = @{
 }
 New-LocalUser @params
 
-# New-LocalUser -Name $username -Password $password -FullName 'Ansible User Account' -Description 'Account used for Ansible automation'
-
 Add-LocalGroupMember -Group "Administrators" -Member $username
 
 </powershell>
