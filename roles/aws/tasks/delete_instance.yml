@@ -127,5 +127,6 @@
         name: "{{ instance_info.instances[0].tags.Name }}"
         region: "{{ aws_region }}"
         state: absent
+        wait: true
 
   when: instance_info.instances[0] is defined and instance_info.instances[0].state.name != "terminated"

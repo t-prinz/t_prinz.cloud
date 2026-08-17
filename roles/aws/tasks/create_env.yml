@@ -22,6 +22,22 @@
     var: vpc_info
     verbosity: 1
 
+- name: create internet gateway for VPC
+  amazon.aws.ec2_vpc_igw:
+    aws_access_key: "{{ aws_aws_access_key | default(omit) }}"
+    aws_secret_key: "{{ aws_aws_secret_key | default(omit) }}"
+    region: "{{ aws_region }}"
+    state: present
+    tags:
+      Name: "{{ aws_igw_name }}"
+    vpc_id: "{{ vpc_info.vpc.id }}"
+  register: igw_info
+
+- name: print internet gateway info
+  ansible.builtin.debug:
+    var: igw_info
+    verbosity: 1
+
 - name: create public subnet in the VPC
   amazon.aws.ec2_vpc_subnet:
     aws_access_key: "{{ aws_aws_access_key | default(omit) }}"
@@ -58,22 +74,6 @@
 #  ansible.builtin.debug:
 #    var: default_rtb_info.route_tables[0].id
 #    verbosity: 1
-
-- name: create internet gateway for VPC
-  amazon.aws.ec2_vpc_igw:
-    aws_access_key: "{{ aws_aws_access_key | default(omit) }}"
-    aws_secret_key: "{{ aws_aws_secret_key | default(omit) }}"
-    region: "{{ aws_region }}"
-    state: present
-    tags:
-      Name: "{{ aws_igw_name }}"
-    vpc_id: "{{ vpc_info.vpc.id }}"
-  register: igw_info
-
-- name: print internet gateway info
-  ansible.builtin.debug:
-    var: igw_info
-    verbosity: 1
 
 #- name: create route table entry for the internet gateway
 #  amazon.aws.ec2_vpc_route_table:

@@ -29,6 +29,15 @@
       region: "{{ aws_region }}"
       state: absent
 
+  - name: Delete Public Route Table
+    amazon.aws.ec2_vpc_route_table:
+      vpc_id: "{{ vpc_info.vpc.id }}"
+      region: "{{ aws_region }}"
+      tags:
+        Name: "{{ aws_public_route_table_name }}"
+      state: absent
+    register: public_rtb_info
+
   - name: remove subnet for VPC
     amazon.aws.ec2_vpc_subnet:
       aws_access_key: "{{ aws_aws_access_key | default(omit) }}"
