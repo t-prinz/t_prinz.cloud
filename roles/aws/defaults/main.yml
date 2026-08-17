@@ -23,6 +23,10 @@ aws_subnet_name: "{{ aws_vpc_name }}-subnet"
 aws_subnet_cidr: 10.0.0.0/24
 #aws_az: us-east-2a
 
+# This defines the public route table
+
+aws_public_route_table_name: "{{ aws_vpc_name }}-public-route-table"
+
 # This defines the name of the internet gateway
 
 aws_igw_name: "{{ aws_vpc_name }}-igw"
