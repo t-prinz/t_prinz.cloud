@@ -9,8 +9,6 @@
 
 - name: create VPC
   amazon.aws.ec2_vpc_net:
-    aws_access_key: "{{ aws_aws_access_key | default(omit) }}"
-    aws_secret_key: "{{ aws_aws_secret_key | default(omit) }}"
     name: "{{ aws_vpc_name }}"
     region: "{{ aws_region }}"
     cidr_block: "{{ aws_vpc_cidr_block }}"
@@ -24,8 +22,6 @@
 
 - name: create internet gateway for VPC
   amazon.aws.ec2_vpc_igw:
-    aws_access_key: "{{ aws_aws_access_key | default(omit) }}"
-    aws_secret_key: "{{ aws_aws_secret_key | default(omit) }}"
     region: "{{ aws_region }}"
     state: present
     tags:
@@ -40,8 +36,6 @@
 
 - name: create public subnet in the VPC
   amazon.aws.ec2_vpc_subnet:
-    aws_access_key: "{{ aws_aws_access_key | default(omit) }}"
-    aws_secret_key: "{{ aws_aws_secret_key | default(omit) }}"
     az: "{{ aws_az | default(omit) }}"
     cidr: "{{ aws_subnet_cidr }}"
     region: "{{ aws_region }}"
@@ -58,8 +52,6 @@
 
 #- name: get information for VPC default route table
 #  amazon.aws.ec2_vpc_route_table_info:
-#    aws_access_key: "{{ aws_aws_access_key | default(omit) }}"
-#    aws_secret_key: "{{ aws_aws_secret_key | default(omit) }}"
 #    filters:
 #      vpc-id: "{{ vpc_info.vpc.id }}"
 #    region: "{{ aws_region }}"
@@ -77,8 +69,6 @@
 
 #- name: create route table entry for the internet gateway
 #  amazon.aws.ec2_vpc_route_table:
-#    aws_access_key: "{{ aws_aws_access_key | default(omit) }}"
-#    aws_secret_key: "{{ aws_aws_secret_key | default(omit) }}"
 #    lookup: id
 #    region: "{{ aws_region }}"
 #    route_table_id: "{{ default_rtb_info.route_tables[0].id }}"
@@ -111,8 +101,6 @@
 
 - name: create security group
   amazon.aws.ec2_group:
-    aws_access_key: "{{ aws_aws_access_key | default(omit) }}"
-    aws_secret_key: "{{ aws_aws_secret_key | default(omit) }}"
     description: allow http, https, and ssh access
     name: "{{ aws_securitygroup_name }}"
     region: "{{ aws_region }}"

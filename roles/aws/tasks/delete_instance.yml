@@ -1,8 +1,6 @@
 ---
 - name: get instance info
   amazon.aws.ec2_instance_info:
-    aws_access_key: "{{ aws_aws_access_key | default(omit) }}"
-    aws_secret_key: "{{ aws_aws_secret_key | default(omit) }}"
     filters:
       "tag:Name": "{{ inventory_hostname }}"
     region: "{{ aws_region }}"
@@ -27,8 +25,6 @@
 
     - name: get elastic ip info
       amazon.aws.ec2_eip_info:
-        aws_access_key: "{{ aws_aws_access_key | default(omit) }}"
-        aws_secret_key: "{{ aws_aws_secret_key | default(omit) }}"
         filters:
           "tag:Name": "{{ inventory_hostname }}"
         region: "{{ aws_region }}"
@@ -45,8 +41,6 @@
 
         - name: get route53 zone id
           amazon.aws.route53_zone:
-            aws_access_key: "{{ aws_aws_access_key | default(omit) }}"
-            aws_secret_key: "{{ aws_aws_secret_key | default(omit) }}"
             zone: "{{ aws_route53_zone }}"
           register: route53_zone_info
 
@@ -65,8 +59,6 @@
 
         - name: get route53 dns info for the instance
           amazon.aws.route53_info:
-            aws_access_key: "{{ aws_aws_access_key | default(omit) }}"
-            aws_secret_key: "{{ aws_aws_secret_key | default(omit) }}"
             type: A
             query: record_sets
             hosted_zone_id: "{{ route53_zone_info.zone_id }}"
@@ -94,8 +86,6 @@
 
         - name: delete the route53 dns entry
           amazon.aws.route53:
-            aws_access_key: "{{ aws_aws_access_key | default(omit) }}"
-            aws_secret_key: "{{ aws_aws_secret_key | default(omit) }}"
             record: "{{ route53_out.resource_record_sets[0].name }}"
             state: absent
             type: "{{ route53_out.resource_record_sets[0].type }}"
@@ -106,8 +96,6 @@
 
         - name: delete the elastic ip's from the instance
           amazon.aws.ec2_eip:
-            aws_access_key: "{{ aws_aws_access_key | default(omit) }}"
-            aws_secret_key: "{{ aws_aws_secret_key | default(omit) }}"
             device_id: "{{ eip_info.addresses[0].instance_id }}"
             public_ip: "{{ eip_info.addresses[0].public_ip }}"
             region: "{{ aws_region }}"
@@ -119,8 +107,6 @@
 
     - name: delete the instance
       amazon.aws.ec2_instance:
-        aws_access_key: "{{ aws_aws_access_key | default(omit) }}"
-        aws_secret_key: "{{ aws_aws_secret_key | default(omit) }}"
         image_id: "{{ instance_info.instances[0].image_id }}"
         instance_ids: "{{ instance_info.instances[0].instance_id }}"
         instance_type: "{{ instance_info.instances[0].instance_type }}"
